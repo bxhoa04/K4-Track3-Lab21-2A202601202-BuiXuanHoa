@@ -33,7 +33,8 @@ def check(name: str, status: str, detail: str = "") -> None:
 
 
 def _sha(path: pathlib.Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()[:16]
+    content = path.read_bytes().replace(b"\r\n", b"\n")
+    return hashlib.sha256(content).hexdigest()[:16]
 
 
 def _load_json(path: pathlib.Path):
@@ -248,6 +249,8 @@ def full() -> None:
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true", help="imports + data + tests only")
     args = ap.parse_args()
