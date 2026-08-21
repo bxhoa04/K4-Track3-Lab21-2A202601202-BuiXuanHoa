@@ -16,6 +16,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import pathlib
 import subprocess
 import sys
@@ -74,11 +75,11 @@ def smoke() -> None:
               f"{sum(1 for _ in p.open(encoding='utf-8'))} rows" if p.exists()
               else "missing — run scripts/make_seed_data.py")
 
-    # NOTE: pyproject sets addopts="-q". Passing -q again yields -qq, which hides the
-    # summary line. Use -rN + --tb=no and let the configured -q stand.
+    env = dict(os.environ)
+    env["PYTHONPATH"] = f"{ROOT}:{ROOT / 'src'}:{ROOT / 'tests'}:{env.get('PYTHONPATH', '')}"
     proc = subprocess.run(
         [sys.executable, "-m", "pytest", str(ROOT / "tests"), "--tb=no", "-rN"],
-        capture_output=True, text=True, cwd=ROOT)
+        capture_output=True, text=True, cwd=ROOT, env=env)
     lines = [l.strip() for l in (proc.stdout or proc.stderr).splitlines() if l.strip()]
     # The last line may be pytest's progress dots; the summary is the line that reports
     # counts. Search backwards for it rather than assuming position.
